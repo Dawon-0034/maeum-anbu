@@ -107,6 +107,9 @@ nav.tabs .badge{font-size:11px;font-variant-numeric:tabular-nums}
 .reccard.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .reccard .msg{max-height:9em}
 .tag.an{background:var(--warm-soft);color:var(--warm)}
+.btn.big{padding:13px 16px;font-size:16px;border-radius:12px}
+.btn.danger-fill{background:var(--warn);border-color:var(--warn);color:#fff;font-weight:600}
+.sheet-actions{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:6px}
 .helpbtn{display:flex;align-items:center;gap:8px;width:100%;border:1px dashed var(--accent);background:var(--accent-soft);color:var(--accent);border-radius:12px;padding:10px 14px;font-weight:600;font-size:15px;margin:4px 0 4px;text-align:left}
 .helpbtn span{flex:1}
 .guide{display:grid;gap:10px}
@@ -301,7 +304,7 @@ html.big .wrap,html.big nav.tabs,html.big .sheet{zoom:1.15}
 
 <nav class="tabs" role="tablist">
   <button role="tab" data-tab="send" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12 20 4l-4 16-4-7-8-1Z"/><path d="m12 13 8-9"/></svg>보내기</button>
-  <button role="tab" data-tab="cust" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.8.7 3 2.4 3.5 5.2"/></svg>고객 <span class="badge" id="tabBadge"></span></button>
+  <button role="tab" data-tab="cust" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.8.7 3 2.4 3.5 5.2"/></svg><span>고객<span class="badge" id="tabBadge"></span></span></button>
   <button role="tab" data-tab="tpl" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>인사말</button>
   <button role="tab" data-tab="help" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.8"/><circle cx="12" cy="17.2" r=".6" fill="currentColor"/></svg>사용안내</button>
   <button role="tab" data-tab="set" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>설정</button>
@@ -580,8 +583,8 @@ function renderOne(rs,t){
   $('#sendBody').querySelectorAll('[data-send]').forEach(a=>a.onclick=()=>markSent(a.dataset.send));
   $('#sendBody').querySelectorAll('[data-cm]').forEach(b=>b.onclick=()=>{const c=byId(b.dataset.cm);copy(fill(t.body,c),'문구를 복사했어요');markSent(c.id)});
   $('#sendBody').querySelectorAll('[data-cp]').forEach(b=>b.onclick=()=>copy(digits(byId(b.dataset.cp).phone),'번호를 복사했어요'));
-  const rb=$('#resetSent');if(rb){let arm=false;rb.onclick=()=>{if(!arm){arm=true;rb.textContent='한 번 더 누르면 지웁니다';return}
-    Object.keys(S.sent).forEach(k=>{if(k.startsWith(t.id+':'))delete S.sent[k]});save();renderSend()}}
+  const rb=$('#resetSent');if(rb)rb.onclick=()=>confirmBox('발송 기록을 지울까요?','이 인사말로 보낸 표시(✓)가 지워지고 처음부터 다시 보낼 수 있어요. 문자는 취소되지 않아요.','네, 지울게요',
+    ()=>{Object.keys(S.sent).forEach(k=>{if(k.startsWith(t.id+':'))delete S.sent[k]});save();renderSend();toast('발송 기록을 지웠어요')});
 }
 function smsHref(phones,text){const n=digits(phones[0]);const b=encodeURIComponent(text);return isIOS?`sms:${n}&body=${b}`:`sms:${n}?body=${b}`;}
 const stamp=()=>{const d=new Date();return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`};
@@ -624,6 +627,12 @@ $('#addCust').onclick=()=>editCust(null);
 function sheet(html,onMount){const r=$('#sheetRoot');r.innerHTML=`<div class="sheet-bg"><div class="sheet">${html}</div></div>`;
   const bg=r.firstChild;bg.onclick=e=>{if(e.target===bg)closeSheet()};onMount(bg);}
 const closeSheet=()=>$('#sheetRoot').innerHTML='';
+function confirmBox(title,msg,okLabel,onOk,onCancel){
+  sheet(`<div style="text-align:center;padding:8px 0 4px"><div style="font-size:40px;line-height:1">🗑️</div>
+    <h3 style="margin:10px 0 6px;font-size:19px">${title}</h3><p class="note" style="font-size:15px;margin:0 0 18px">${msg}</p></div>
+    <div style="display:grid;gap:10px"><button class="btn big danger-fill" id="cf-ok">${okLabel}</button><button class="btn big" id="cf-no">아니요, 그대로 둘게요</button></div>`,()=>{
+    $('#cf-ok').onclick=()=>{closeSheet();onOk()};$('#cf-no').onclick=()=>{closeSheet();onCancel&&onCancel()}});
+}
 function parseBday(v){v=String(v||'').trim();let m=v.match(/^(?:\d{4}|--)?[-./ ]?(\d{1,2})[-./ 월]\s*(\d{1,2})/)||v.match(/^(?:\d{4}|--)(\d{2})(\d{2})$/)||v.match(/^(\d{2})(\d{2})$/);
   if(!m)return '';const mo=+m[1],d=+m[2];if(mo<1||mo>12||d<1||d>31)return '';return `${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
 
@@ -639,14 +648,11 @@ function editCust(c){
     <datalist id="taglist">${tags.map(t=>`<option value="${esc(t)}">`).join('')}</datalist>
     <label class="f" for="e-memo">메모 (나만 보는 내용)</label><input type="text" id="e-memo" value="${esc(c?.memo)}" placeholder="예: 자녀 대학 입학, 실손 가입">
     <p class="note" id="e-err" style="color:var(--warn)"></p>
-    <div class="row between">
-      ${c?'<button class="btn danger" id="e-del">삭제</button>':'<span></span>'}
-      <div class="row"><button class="btn" id="e-cancel">취소</button><button class="btn primary" id="e-save">저장</button></div>
-    </div>`,()=>{
+    <div class="sheet-actions"><button class="btn big" id="e-cancel">취소</button><button class="btn big primary" id="e-save">저장하기</button></div>
+    ${c?'<button class="btn big ghost danger" id="e-del" style="width:100%;margin-top:14px">🗑️ 이 고객 삭제하기</button>':''}`,()=>{
     $('#e-cancel').onclick=closeSheet;
-    let delArm=false;
-    if(c)$('#e-del').onclick=e=>{if(!delArm){delArm=true;e.target.textContent='정말 삭제할까요? 한 번 더';return}
-      S.customers=S.customers.filter(x=>x.id!==c.id);save();closeSheet();render();toast('삭제했습니다')};
+    if(c)$('#e-del').onclick=()=>confirmBox(`${esc(c.name)} 님을 삭제할까요?`,'삭제하면 되돌릴 수 없어요.','네, 삭제할게요',
+      ()=>{S.customers=S.customers.filter(x=>x.id!==c.id);S.selected=S.selected.filter(x=>x!==c.id);save();render();toast(`${c.name} 님을 삭제했어요`)},()=>editCust(c));
     $('#e-save').onclick=()=>{const name=$('#e-name').value.trim(),phone=digits($('#e-phone').value),bv=$('#e-bday').value.trim(),bday=parseBday(bv),av=$('#e-anniv').value.trim(),anniv=parseBday(av);
       if(!name){$('#e-err').textContent='이름을 입력해 주세요.';return}
       if(phone.length<9){$('#e-err').textContent='전화번호를 확인해 주세요. (숫자 10~11자리)';return}
@@ -728,15 +734,14 @@ function editTpl(t){
     <div class="tokens">${[['{이름}','이름'],['{이름만}','성 뺀 이름'],['{호칭}','호칭'],['{월}','이번 달'],['{설계사}','내 이름']].map(([k,l])=>`<button class="chip" data-k="${k}">+ ${l}</button>`).join('')}</div>
     <p class="note">문구에 이름 칸이 없으면 맨 앞에 ‘고객 이름 + 호칭~’, 맨 끝에 ‘- 내 이름 드림’이 자동으로 붙어요. (설정에서 끌 수 있어요)</p>
     <label class="f">미리보기 (${esc(sample.name)} 님께 갈 때)</label><div class="msg" id="t-prev" style="max-height:none"></div>
-    <div class="row between" style="margin-top:12px">
-      ${t?'<button class="btn danger" id="t-del">삭제</button>':'<span></span>'}
-      <div class="row"><button class="btn" id="t-cancel">취소</button><button class="btn primary" id="t-save">저장</button></div></div>`,()=>{
+    <div class="sheet-actions"><button class="btn big" id="t-cancel">취소</button><button class="btn big primary" id="t-save">저장하기</button></div>
+    ${t?'<button class="btn big ghost danger" id="t-del" style="width:100%;margin-top:14px">🗑️ 이 인사말 삭제하기</button>':''}`,()=>{
     const body=$('#t-body');const prev=()=>$('#t-prev').textContent=fill(body.value,sample);prev();body.oninput=prev;
     document.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const s=body.selectionStart??body.value.length,e=body.selectionEnd??s;
       body.value=body.value.slice(0,s)+b.dataset.k+body.value.slice(e);body.focus();body.selectionStart=body.selectionEnd=s+b.dataset.k.length;prev()});
     $('#t-cancel').onclick=closeSheet;
-    let arm=false;if(t)$('#t-del').onclick=e=>{if(!arm){arm=true;e.target.textContent='정말 삭제할까요? 한 번 더';return}
-      S.templates=S.templates.filter(x=>x.id!==t.id);save();closeSheet();render()};
+    if(t)$('#t-del').onclick=()=>confirmBox(`‘${esc(t.name)}’ 인사말을 삭제할까요?`,'지운 기본 인사말은 인사말 탭 아래 ‘기본 인사말 다시 넣기’로 되살릴 수 있어요.','네, 삭제할게요',
+      ()=>{S.templates=S.templates.filter(x=>x.id!==t.id);save();render();toast('인사말을 삭제했어요')},()=>editTpl(t));
     $('#t-save').onclick=()=>{const name=$('#t-name').value.trim()||'인사말',cat=$('#t-cat').value.trim()||'내가 만든 인사말',b=body.value.trim();if(!b){toast('문구를 입력해 주세요');return}
       if(t)Object.assign(t,{name,cat,body:b});else{const n={id:uid(),name,cat,body:b};S.templates.push(n);S.tplId=n.id}
       save();closeSheet();render();toast('저장했습니다')};
@@ -756,10 +761,12 @@ $('#restoreBtn').onclick=()=>{try{const d=JSON.parse($('#restoreText').value.tri
   S.customers.forEach(c=>{c.bday=c.bday||'';c.anniv=c.anniv||'';c.memo=c.memo||''});
   save();$('#restoreText').value='';$('#restoreBox').hidden=true;$('#myName').value=S.me;$('#defTitle').value=S.defTitle;render();toast(`고객 ${S.customers.length}명을 복원했습니다`)}
   catch(e){toast('백업 문구가 올바르지 않아요. 전체를 빠짐없이 붙여넣었는지 확인해 주세요')}};
-$('#clearEx').onclick=()=>{const n=S.customers.filter(c=>c.ex).length;S.customers=S.customers.filter(c=>!c.ex);save();render();toast(n?`예시 ${n}명을 지웠습니다`:'예시 고객이 없습니다')};
+$('#clearEx').onclick=()=>{const n=S.customers.filter(c=>c.ex).length;if(!n){toast('예시 고객이 없습니다');return}
+  confirmBox(`예시 고객 ${n}명을 지울까요?`,'김민수·이영희·박준호 같은 연습용 고객만 지워요. 직접 넣은 고객은 그대로예요.','네, 지울게요',
+  ()=>{S.customers=S.customers.filter(c=>!c.ex);save();render();toast(`예시 ${n}명을 지웠습니다`)})};
 
 /* ---------- 업그레이드 ---------- */
-const APP_VERSION='1.6.1';
+const APP_VERSION='1.6.2';
 const newer=(a,b)=>{const x=String(a).split('.').map(Number),y=String(b).split('.').map(Number);for(let i=0;i<3;i++){if((x[i]||0)!==(y[i]||0))return (x[i]||0)>(y[i]||0)}return false};
 $('#verNow').textContent='v'+APP_VERSION;
 const online=/^https?:$/.test(location.protocol);
@@ -846,7 +853,8 @@ const HELP={
 const FAQ=`<div class="faq">
  <p>문자앱이 안 열려요</p><div>‘문구 복사’를 누르고, 문자앱에서 받는 사람 칸에 ‘번호 복사’한 번호를 붙여넣고 내용 칸에 문구를 붙여넣으세요.</div>
  <p>고객 목록이 없어졌어요</p><div>홈 화면의 마음안부 아이콘으로 열었는지 확인하세요. 카톡이나 다른 브라우저로 열면 목록이 안 보여요. 그래도 없으면 설정 → 백업으로 복원을 쓰세요.</div>
- <p>보낸 사람을 다시 보내고 싶어요</p><div>보내기 화면 위쪽 ‘발송 기록 지우기’를 두 번 누르면 처음부터 다시 보낼 수 있어요.</div>
+ <p>보낸 사람을 다시 보내고 싶어요</p><div>보내기 화면의 ‘발송 기록 지우기’를 누르고 ‘네, 지울게요’를 누르면 처음부터 다시 보낼 수 있어요.</div>
+ <p>고객을 지우고 싶어요</p><div>고객 탭에서 이름 오른쪽 ‘수정’ → 맨 아래 ‘🗑️ 이 고객 삭제하기’ → ‘네, 삭제할게요’를 누르세요.</div>
  <p>잘못 눌렀어요</p><div>문자앱에서 전송을 누르기 전이면 아무것도 보내지지 않아요. 그냥 뒤로 가기를 누르세요.</div>
 </div>`;
 function renderGuide(){
