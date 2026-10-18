@@ -766,7 +766,8 @@ $('#clearEx').onclick=()=>{const n=S.customers.filter(c=>c.ex).length;if(!n){toa
   ()=>{S.customers=S.customers.filter(c=>!c.ex);save();render();toast(`예시 ${n}명을 지웠습니다`)})};
 
 /* ---------- 업그레이드 ---------- */
-const APP_VERSION='1.6.2';
+const APP_VERSION='1.6.3';
+const APP_NOTES=['새 버전으로 바뀌면 이렇게 바뀐 내용을 알려 드려요','고객·인사말 삭제할 때 확인 화면이 나와요','아이폰·안드로이드 화면 크기에 맞게 고쳤어요'];
 const newer=(a,b)=>{const x=String(a).split('.').map(Number),y=String(b).split('.').map(Number);for(let i=0;i<3;i++){if((x[i]||0)!==(y[i]||0))return (x[i]||0)>(y[i]||0)}return false};
 $('#verNow').textContent='v'+APP_VERSION;
 const online=/^https?:$/.test(location.protocol);
@@ -819,7 +820,7 @@ if(online){$('#noticeBox').hidden=false;
     $('#noticeText').textContent=t;$('#noticeSms').href=isIOS?`sms:&body=${encodeURIComponent(t)}`:`sms:?body=${encodeURIComponent(t)}`;return t;};
   makeNotice();$('#noticeCopy').onclick=()=>copy($('#noticeText').textContent,'안내 문구를 복사했어요');}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpdate(false)});
-if(/[?&]v=/.test(location.search)&&history.replaceState){history.replaceState(null,'',location.pathname);setTimeout(()=>toast(`v${APP_VERSION}(으)로 업그레이드했어요`),300)}
+if(/[?&]v=/.test(location.search)&&history.replaceState)history.replaceState(null,'',location.pathname);
 
 /* ---------- 사용안내 ---------- */
 const HELP={
@@ -871,6 +872,15 @@ const applyBig=()=>document.documentElement.classList.toggle('big',!!S.big);
 $('#bigText').checked=!!S.big;applyBig();
 $('#bigText').onchange=e=>{S.big=e.target.checked;save();applyBig()};
 /* 처음 실행 안내 */
+/* 새 버전으로 바뀐 뒤 처음 열 때 안내 */
+const wasUser=!!S.welcomed;
+if(S.seenVer!==APP_VERSION){const prev=S.seenVer;S.seenVer=APP_VERSION;save();
+  if(wasUser)setTimeout(()=>sheet(`<div style="text-align:center;padding:6px 0"><div style="font-size:40px;line-height:1">🎉</div>
+    <h3 style="margin:10px 0 4px;font-size:19px">업데이트가 끝났어요</h3>
+    <p class="note" style="font-size:15px;margin:0">${prev?`v${esc(prev)} → `:''}<b style="color:var(--accent)">v${APP_VERSION}</b></p></div>
+    <ul style="margin:14px 0;padding-left:20px;font-size:15px;line-height:1.8">${APP_NOTES.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>
+    <p class="note" style="font-size:14px;margin:0 0 14px">고객 목록과 인사말은 그대로 있어요.</p>
+    <button class="btn big primary" style="width:100%" id="upd-ok">확인</button>`,()=>{$('#upd-ok').onclick=closeSheet}),400);}
 if(!S.welcomed){S.welcomed=true;save();setTimeout(()=>sheet(`<div class="hero" style="margin-bottom:14px"><h3>마음안부에 오신 걸 환영해요</h3><p>고객 이름이 들어간 안부 문자를 한 명씩 쉽게 보내는 앱이에요.</p></div>
   <ol class="steps"><li><div><b>설정</b>에서 내 이름을 적어요</div></li><li><div><b>고객</b>에서 고객을 넣고 체크해요</div></li><li><div><b>보내기</b>에서 인사말을 고르고 ‘문자 보내기’를 눌러요</div></li></ol>
   <p class="note" style="font-size:14px">지금 보이는 김민수·이영희·박준호는 연습용 예시예요. 설정에서 지울 수 있어요.<br>모르는 게 있으면 화면 위 <b>❓ 사용안내</b>나 아래 <b>사용안내</b> 탭을 누르세요.</p>
